@@ -10,16 +10,35 @@ services:
             - '5432:5432'
         volumes:
             - postgres13:/var/lib/postgresql/data
+        networks:
+            - store-network
     redis:
         image: redis:7.0.15-alpine
         ports:
-        - '6379:6379'
+            - '6379:6379'
         volumes:
-        - redis_data:/data  
+            - redis_data:/data
+        networks:
+            - store-network
     web:
-        ## TODO
+        build: .
+        tty: true
+        stdin_open: true
+        image: store-api
+        entrypoint: ./bin/docker-entrypoint
+        command: bundle exec rails s -p 3000 -b 0.0.0.0
+        volumes:
+            - .:/rails
+        ports:
+            - '3000:3000'
+        environment:
+            - DATABASE_URL=postgresql://postgres:password@db:5432/myapp_test
+            - REDIS_URL=redis://redis:6379/0
+        networks:
+            - store-network
     test:
         build: .
+        image: store-api-test
         command: bundle exec rspec
         volumes:
             - .:/rails
@@ -27,7 +46,14 @@ services:
             - db
             - redis 
         environment:
-            - DATABASE_URL: postgresql://postgres:password@db:5432/myapp_test
-            - REDIS_URL: redis://redis:6379/0
+            - DATABASE_URL=postgresql://postgres:password@db:5432/myapp_test
+            - REDIS_URL=redis://redis:6379/0
+        networks:
+            - store-network
 volumes:
     postgres13:
+    redis_data:
+
+networks:
+    store-network:
+        driver: bridge
