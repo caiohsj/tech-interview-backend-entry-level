@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'sidekiq/testing'
 
 RSpec.describe Cart, type: :model do
   context 'when validating' do
@@ -10,20 +11,24 @@ RSpec.describe Cart, type: :model do
   end
 
   describe 'mark_as_abandoned' do
-    let(:shopping_cart) { create(:shopping_cart) }
+    let(:shopping_cart) { create(:cart) }
 
     it 'marks the shopping cart as abandoned if inactive for a certain time' do
-      shopping_cart.update(last_interaction_at: 3.hours.ago)
-      expect { shopping_cart.mark_as_abandoned }.to change { shopping_cart.abandoned? }.from(false).to(true)
+      Sidekiq::Testing.inline! do
+        shopping_cart.update(last_interaction_at: 3.hours.ago)
+        MarkCartAsAbandonedJob.perform_async
+        expect(shopping_cart.reload.abandoned?).to be_truthy
+      end
     end
   end
 
   describe 'remove_if_abandoned' do
-    let(:shopping_cart) { create(:shopping_cart, last_interaction_at: 7.days.ago) }
-
     it 'removes the shopping cart if abandoned for a certain time' do
-      shopping_cart.mark_as_abandoned
-      expect { shopping_cart.remove_if_abandoned }.to change { Cart.count }.by(-1)
+      Sidekiq::Testing.inline! do
+        shopping_cart = create(:cart, :available_to_remove)
+        MarkCartAsAbandonedJob.perform_async
+        expect(Cart.find_by(id: shopping_cart.id)).to be_nil
+      end
     end
   end
 end
