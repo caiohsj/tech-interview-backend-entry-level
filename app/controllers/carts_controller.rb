@@ -18,6 +18,9 @@ class CartsController < ApplicationController
     render json: cart, status: :ok
   end
 
+  def remove_item
+  end
+
   private
 
   def create_params
