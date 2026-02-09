@@ -64,4 +64,28 @@ RSpec.describe '/cart', type: :request do
       end
     end
   end
+
+  describe 'DELETE /cart/:product_id' do
+    let(:product) { create(:product) }
+    let(:cart) { create(:cart, total_price: product.price.to_f) }
+    let!(:cart_item) { create(:cart_item, cart: cart, product: product) }
+
+    context 'when the product is in the cart' do
+      it 'removes the product from the cart' do
+        delete "/cart/#{product.id}", as: :json
+        expect(response).to have_http_status(:ok)
+      end
+
+      it 'updates the total price of the cart' do
+        expect { subject }.to change { cart.reload.total_price }.by(0)
+      end
+    end
+
+    context 'when the product is not in the cart' do
+      it 'returns a not found status' do
+        delete "/cart/#{product.id + 1}", as: :json
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+  end
 end

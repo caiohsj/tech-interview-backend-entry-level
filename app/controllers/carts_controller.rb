@@ -19,6 +19,14 @@ class CartsController < ApplicationController
   end
 
   def remove_item
+    cart = Cart.first_or_create(total_price: 0)
+    cart_item = cart.cart_items.find_by(product_id: params[:product_id])
+
+    return render status: :not_found if cart_item.blank?
+
+    cart.remove_item(cart_item)
+
+    render json: cart, status: :ok
   end
 
   private

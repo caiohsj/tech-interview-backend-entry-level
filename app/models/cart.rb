@@ -19,4 +19,12 @@ class Cart < ApplicationRecord
     end
   end
 
+  def remove_item(cart_item)
+    ActiveRecord::Base.transaction do
+      cart_item.destroy
+      self.total_price -= cart_item.product.price * cart_item.quantity
+      save!  
+    end
+  end
+
 end
