@@ -24,3 +24,7 @@ end
 
 group :development do
 end
+
+gem "database_cleaner-active_record", "~> 2.2", :group => :test
+
+gem "active_model_serializers", "~> 0.10.16"
