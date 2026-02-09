@@ -29,6 +29,12 @@ class CartsController < ApplicationController
     render json: cart, status: :ok
   end
 
+  def destroy
+    Cart.destroy_all
+
+    render status: :no_content
+  end
+
   private
 
   def create_params

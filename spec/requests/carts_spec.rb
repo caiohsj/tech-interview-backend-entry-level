@@ -88,4 +88,16 @@ RSpec.describe '/cart', type: :request do
       end
     end
   end
+
+  describe 'DELETE /cart' do
+    let(:product) { create(:product) }
+    let(:cart) { create(:cart, total_price: product.price.to_f) }
+    let!(:cart_item) { create(:cart_item, cart: cart, product: product) }
+
+    it 'destroys the cart' do
+      delete "/cart", as: :json
+      expect(response).to have_http_status(:no_content)
+      expect(Cart.count).to be_zero
+    end
+  end
 end
