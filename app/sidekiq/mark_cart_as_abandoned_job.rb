@@ -2,7 +2,7 @@ class MarkCartAsAbandonedJob
   include Sidekiq::Job
   queue_as :default
 
-  def perform
+  def perform(*args)
     carts_without_interaction = Cart.where(last_interaction_at: ..3.hours.ago)
     carts_without_interaction.each do |cart|
       cart.mark_as_abandoned
